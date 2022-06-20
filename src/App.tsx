@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
 import "./App.css";
-import { AccessTokenResponse, CodeResponse, TokenResponse } from "./types/global";
+import { AccessTokenResponse, CredentialsResponse } from "./types/global";
 import jwtDecode from "jwt-decode";
 
+const GOOGLE_BASE_API = "https://www.googleapis.com";
 const CLIENT_ID = "597970294293-ig286aeiqam5up6th4gmp75dmv7dahe4.apps.googleusercontent.com";
 
 interface DecodedToken {
@@ -10,12 +11,13 @@ interface DecodedToken {
 }
 
 interface User {
-    accessToken: string;
+    idToken: string;
     userId: string;
 }
 
 function App() {
-    const [user, setUser] = useState<User | null>(null);
+    const [user, setUser] = useState<User>();
+    const [accessToken, setAccessToken] = useState<string>();
 
     useEffect(() => {
         const elem = document.getElementById("buttonDiv");
@@ -27,38 +29,17 @@ function App() {
     }, []);
 
     const handleTokenResponse = function (rsp: AccessTokenResponse): void {
-        console.log(rsp);
+        console.log("token response", rsp);
+
+        setAccessToken(rsp.access_token);
     };
 
-    const handleCodeResponse = async function (rsp: CodeResponse): Promise<void> {
-        console.log(rsp);
-        const requestBody = JSON.stringify({ code: rsp.code });
-        const response = await fetch("http://localhost:3001/oauth2callback", {
-            method: "post",
-            body: requestBody,
-            headers: { "Content-Type": "application/json" },
-        });
-        const body = await response.json();
-
-        console.log(body);
-    };
-
-    const handleCredetialsResponse = function (rsp: TokenResponse) {
+    const handleCredetialsResponse = function (rsp: CredentialsResponse) {
         const decoded: DecodedToken = jwtDecode(rsp.credential);
-        const accessToken = rsp.credential;
+        const idToken = rsp.credential;
         const userId = decoded.sub;
 
-        setUser({ accessToken, userId });
-
-        console.log("init client:");
-
-        // const codeClient = window.google.accounts.oauth2.initCodeClient({
-        //     callback: handleCodeResponse,
-        //     client_id: CLIENT_ID,
-        //     redirect_uri: "https://localhost:3000",
-        //     scope: "https://www.googleapis.com/auth/userinfo.profile",
-        // });
-        // codeClient.requestCode();
+        setUser({ idToken, userId });
 
         const tokenClient = window.google.accounts.oauth2.initTokenClient({
             callback: handleTokenResponse,
@@ -67,13 +48,41 @@ function App() {
         });
 
         tokenClient.requestAccessToken();
+    };
 
-        console.log("client initialized");
+    // CORS errors
+    const getProfile = async function (id: string, token: string): Promise<void> {
+        const path = `/plus/v1/people/${id}`;
+        const response = await fetch(GOOGLE_BASE_API + path, { headers: { authorization: `Bearer ${token}` } });
+        const body = await response.json();
+
+        console.log(body);
     };
 
     return (
         <div className="App">
             <div id="buttonDiv"></div>
+            {user ? (
+                <span>
+                    <strong>ID Token:</strong> {user.idToken}
+                </span>
+            ) : null}
+            <br />
+            <br />
+            {user ? (
+                <span>
+                    <strong>ID: </strong>
+                    {user.userId}
+                </span>
+            ) : null}
+            <br />
+            <br />
+            {accessToken ? (
+                <span>
+                    <strong>Access Token: </strong>
+                    {accessToken}
+                </span>
+            ) : null}
         </div>
     );
 }

@@ -1,6 +1,6 @@
 export {};
 
-export interface TokenResponse {
+export interface CredentialsResponse {
     credential: string;
     clientId: string;
     select_by: string;
@@ -8,7 +8,7 @@ export interface TokenResponse {
 
 interface InitializeParams {
     client_id: string;
-    callback: (rsp: TokenResponse) => void;
+    callback: (rsp: CredentialsResponse) => void;
 }
 
 interface CodeClientConfig {
