@@ -29,7 +29,6 @@ function App() {
 
     return (
         <div className="App">
-            <div id="buttonDiv"></div>
             <button onClick={() => getCode()}>get code</button>
         </div>
     );
