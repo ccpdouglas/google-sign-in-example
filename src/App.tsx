@@ -1,18 +1,6 @@
-import { useEffect, useState } from "react";
-import "./App.css";
-import { AccessTokenResponse, CodeResponse, TokenResponse } from "./types/global";
-import jwtDecode from "jwt-decode";
+import { CodeResponse } from "./types/global";
 
 const CLIENT_ID = "597970294293-ig286aeiqam5up6th4gmp75dmv7dahe4.apps.googleusercontent.com";
-
-interface DecodedToken {
-    sub: string;
-}
-
-interface User {
-    accessToken: string;
-    userId: string;
-}
 
 function App() {
     const exchangeCode = async function (rsp: CodeResponse): Promise<void> {
