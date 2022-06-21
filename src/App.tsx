@@ -15,23 +15,9 @@ interface User {
 }
 
 function App() {
-    const [user, setUser] = useState<User | null>(null);
-
-    useEffect(() => {
-        const elem = document.getElementById("buttonDiv");
-
-        if (window.google && elem) {
-            window.google.accounts.id.initialize({ client_id: CLIENT_ID, callback: handleCredetialsResponse });
-            window.google.accounts.id.renderButton(elem, { theme: "outline", size: "large" });
-        }
-    }, []);
-
-    const handleTokenResponse = function (rsp: AccessTokenResponse): void {
+    const exchangeCode = async function (rsp: CodeResponse): Promise<void> {
         console.log(rsp);
-    };
 
-    const handleCodeResponse = async function (rsp: CodeResponse): Promise<void> {
-        console.log(rsp);
         const requestBody = JSON.stringify({ code: rsp.code });
         const response = await fetch("http://localhost:3001/oauth2callback", {
             method: "post",
@@ -43,37 +29,20 @@ function App() {
         console.log(body);
     };
 
-    const handleCredetialsResponse = function (rsp: TokenResponse) {
-        const decoded: DecodedToken = jwtDecode(rsp.credential);
-        const accessToken = rsp.credential;
-        const userId = decoded.sub;
-
-        setUser({ accessToken, userId });
-
-        console.log("init client:");
-
-        // const codeClient = window.google.accounts.oauth2.initCodeClient({
-        //     callback: handleCodeResponse,
-        //     client_id: CLIENT_ID,
-        //     redirect_uri: "https://localhost:3000",
-        //     scope: "https://www.googleapis.com/auth/userinfo.profile",
-        // });
-        // codeClient.requestCode();
-
-        const tokenClient = window.google.accounts.oauth2.initTokenClient({
-            callback: handleTokenResponse,
+    const getCode = function () {
+        const codeClient = window.google.accounts.oauth2.initCodeClient({
+            callback: exchangeCode,
             client_id: CLIENT_ID,
+            redirect_uri: "https://localhost:3000",
             scope: "https://www.googleapis.com/auth/userinfo.profile",
         });
-
-        tokenClient.requestAccessToken();
-
-        console.log("client initialized");
+        codeClient.requestCode();
     };
 
     return (
         <div className="App">
             <div id="buttonDiv"></div>
+            <button onClick={() => getCode()}>get code</button>
         </div>
     );
 }
